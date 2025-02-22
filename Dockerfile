@@ -1,5 +1,6 @@
 ARG GITHUB_REPOSITORY
-FROM ${GITHUB_REPOSITORY}alltalk_environment:latest
+ARG DOCKER_TAG=latest
+FROM ${GITHUB_REPOSITORY}alltalk_tts_environment:${DOCKER_TAG}
 
 # Argument to choose the model: piper, vits, xtts
 ARG TTS_MODEL="xtts"
@@ -36,11 +37,19 @@ EOR
 ##############################################################################
 # Install DeepSpeed
 ##############################################################################
-RUN mkdir -p /tmp/deepseped
+RUN mkdir -p /tmp/deepspeed
 COPY docker/deepspeed/build/*.whl /tmp/deepspeed/
 RUN <<EOR
-    DEEPSPEED_WHEEL=$(realpath /tmp/deepspeed/*.whl)
+    DEEPSPEED_WHEEL=$(realpath -q /tmp/deepspeed/*.whl)
     conda activate alltalk
+
+    # Download DeepSpeed wheel if it was not built locally:
+    if [ -z "${DEEPSPEED_WHEEL}" ] || [ ! -f $DEEPSPEED_WHEEL ] ; then
+      echo "Downloading pre-built DeepSpeed wheel"
+      # TODO: use a Github artifact URL instead of Google drive:
+      curl "https://drive.usercontent.google.com/download?id=1HluPmdoSaqSRnFfn1CeZE0sfGtkAWosf&confirm=xxx" -o /tmp/deepspeed/deepspeed-0.16.2+b344c04d-cp311-cp311-linux_x86_64.whl
+      DEEPSPEED_WHEEL=$(realpath -q /tmp/deepspeed/*.whl)
+    fi
 
     echo "Using precompiled DeepSpeed wheel at ${DEEPSPEED_WHEEL}"
     CFLAGS="-I$CONDA_PREFIX/include/" LDFLAGS="-L$CONDA_PREFIX/lib/" \

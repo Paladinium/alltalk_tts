@@ -71,4 +71,4 @@ docker run \
   --name alltalk \
  "${DOCKER_ARGS[@]}" \
  "${ADDITIONAL_ARGS[@]}" \
-  ${GITHUB_REPOSITORY}alltalk_beta:${DOCKER_TAG} &> /dev/stdout
+  ${GITHUB_REPOSITORY}alltalk_tts:${DOCKER_TAG} &> /dev/stdout
